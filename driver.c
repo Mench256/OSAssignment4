@@ -2,6 +2,8 @@
 
 // Sites used
 // https://www.geeksforgeeks.org/command-line-arguments-in-c-cpp/
+// https://www.youtube.com/watch?v=5bFBn_UpItA
+// https://www.tutorialspoint.com/c_standard_library/c_function_fwrite.htm
 
 
 #include <stdio.h>
@@ -9,8 +11,8 @@
 #include <stdlib.h>
 #include <string.h>
 
-
-
+// Function declarations
+void create_fs(char* name, int numBlocks);
 
 
 int main(int argc, char *argv[]){
@@ -23,73 +25,76 @@ if(strcmp(argv[1], "createfs") == 0){
     if(argc != 4){
         printf("Please provide the correct number of arguments!\n");
     }
+
+
+    create_fs(argv[2], atoi(argv[3]));
 }
 
 // formatfs command
-if(strcmp(argv[1], "formatfs") == 0){
+else if(strcmp(argv[1], "formatfs") == 0){
     if(argc != 4){
         printf("Please provide the correct number of arguments!\n");
     }
 }
 
 // savefs command
-if(strcmp(argv[1], "savefs") == 0){
+else if(strcmp(argv[1], "savefs") == 0){
     if(argc != 3){
         printf("Please provide the correct number of arguments!\n");
     }
 }
 
 // openfs command
-if(strcmp(argv[1], "openfs") == 0){
+else if(strcmp(argv[1], "openfs") == 0){
     if(argc != 3){
         printf("Please provide the correct number of arguments!\n");
     }
 }
 
 // list command
-if(strcmp(argv[1], "list") == 0){
+else if(strcmp(argv[1], "list") == 0){
     if(argc != 2){
         printf("Please provide the correct number of arguments!\n");
     }
 }
 
 // remove command
-if(strcmp(argv[1], "remove") == 0){
+else if(strcmp(argv[1], "remove") == 0){
     if(argc != 3){
         printf("Please provide the correct number of arguments!\n");
     }
 }
 
 // rename command
-if(strcmp(argv[1], "rename") == 0){
+else if(strcmp(argv[1], "rename") == 0){
     if(argc != 4){
         printf("Please provide the correct number of arguments!\n");
     }
 }
 
 // put command
-if(strcmp(argv[1], "put") == 0){
+else if(strcmp(argv[1], "put") == 0){
     if(argc != 3){
         printf("Please provide the correct number of arguments!\n");
     }
 }
 
 // get command
-if(strcmp(argv[1], "get") == 0){
+else if(strcmp(argv[1], "get") == 0){
     if(argc != 3){
         printf("Please provide the correct number of arguments!\n");
     }
 }
 
 // user command
-if(strcmp(argv[1], "user") == 0){
+else if(strcmp(argv[1], "user") == 0){
     if(argc != 3){
         printf("Please provide the correct number of arguments!\n");
     }
 }
 
 // link command
-if(strcmp(argv[1], "link") == 0){
+else if(strcmp(argv[1], "link") == 0){
     if(argc != 3){
         printf("Please provide the correct number of arguments!\n");
     }
@@ -97,12 +102,15 @@ if(strcmp(argv[1], "link") == 0){
 
 
 // unlink command
-if(strcmp(argv[1], "unlink") == 0){
+else if(strcmp(argv[1], "unlink") == 0){
     if(argc != 3){
         printf("Please provide the correct number of arguments!\n");
     }
 }
 
+else{
+    printf("Command now found!\n");
+}
 
     return 0;
 }
