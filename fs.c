@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <time.h>
 #define BLOCK_SIZE 512
 
 typedef struct{
@@ -74,5 +75,48 @@ void format_fs(char* name, int numOfFilenames, int numOfDabpt){
 
 
 }
+// list
+void list(char* name, int entries){
+
+        FILE* fp;
+
+        fp = fopen(name, "rb");
+        
+        if(fp != NULL){
+            printf("Disfile opened successfully!\n");
+        }
+        else{
+            printf("Unable to open diskfile!\n");
+        }
+
+
+
+        // fseek sets pointer position
+        fseek(fp, 0, SEEK_SET);
+
+        int entriesPerBlock = BLOCK_SIZE / sizeof(FNT);
+        int numFNT = (entries + entriesPerBlock - 1) / entriesPerBlock;
+        int fntstart = 0;
+        int dabptstart = fntstart + numFNT;
+    
+        for(int i = 0; i < entries; i++){
+            FNT entry;
+            // fread advances position each time
+            fread(&entry, sizeof(FNT), 1, fp);
+
+            if(entry.inodeptr != -1){
+                DABPT data;
+                int offset = (dabptstart * BLOCK_SIZE) + (entry.inodeptr * sizeof(DABPT));
+                fseek(fp, offset, SEEK_SET);
+                fread(&data, sizeof(DABPT), 1, fp);
+
+                printf("Filename: %s   Last Modified: %s   Username: %s\n", entry.filename, ctime(&data.mod), data.username);
+            }
+        }
+        fclose(fp);
+
+
+}
+
 
 
