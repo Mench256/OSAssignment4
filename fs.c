@@ -117,6 +117,22 @@ void list(char* name, int entries){
 
 
 }
+void save(char* name, int numBlocks){
+
+FILE* fp;
+
+fp = fopen(name, "rb");
+
+if(fp != NULL){
+    printf("Disk file opened successfully!\n");
+}
+else{
+    printf("Unable to open disk file!\n");
+}
+
+
+
+}
 
 
 
