@@ -47,7 +47,7 @@ void create_fs(char* name, int numBlocks){
 }
 
 // formatfs
-/*void format_fs(char* name, int numOfFilenames, int numOfDabpt){
+void formatfs(char* name, int numOfFilenames, int numOfDabpt){
 
     FILE* fp;
     fp = fopen(name, "r+b");
@@ -73,8 +73,35 @@ void create_fs(char* name, int numBlocks){
     int dabptstart = fntstart + numFNT;
     int bptrstart = dabptstart + numDABPT;
 
+    // Starting at beginning of FNT
+    fseek(fp, 0, SEEK_SET);
 
-}*/
+    // Zeroing out FNT
+    for(int i = 0; i < numofFilnames; i++){
+        FNT entry;
+
+        memset(entry.filename, 0, sizeof(entry.filename));
+        entry.inodeptr != -1;
+
+        fwrite(&entry, sizeof(FNT), 1, fp);
+    }
+
+    // Starting at begining of DABPT
+    fseek(fp, dabptstart * BLOCK_SIZE, SEEK_SET);
+    // Zeroing out DABPT 
+    for(int i = 0; i < numOfDabpt; i++){
+        DABPT data;
+
+        data.fileSize = 0;
+        data.mod = 0;
+        data.blockptr = -1;
+        memset(data.username, 0, sizeof(data.username));
+        fwrite(&data, sizeof(DABPT), 1, fp);
+    }
+
+
+    close(fp);
+}
 // list
 /*void list(char* name, int entries){
 

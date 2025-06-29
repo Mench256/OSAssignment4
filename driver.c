@@ -18,6 +18,7 @@ void create_fs(char* name, int numBlocks);
 void list(char* name, int entries);
 void savefs(char* name, int numBlocks);
 void removefs(char* name, int entries, char* removeFile);
+void formatfs(char* name, int numOfFilenames, int numOfDabpt);
 
 
 int main(int argc, char *argv[]){
@@ -40,7 +41,7 @@ else if(strcmp(argv[1], "formatfs") == 0){
     if(argc < 4){
         printf("Please provide the correct number of arguments!\n");
     }
-    // format(argv[2], atoi(argv[3]),atoi(argv[4]))
+    formatfs(argv[2], atoi(argv[3]),atoi(argv[4]))
 }
 
 // savefs command
