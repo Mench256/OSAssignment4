@@ -151,10 +151,41 @@ for(int i = 0; i < numBlocks; i++){
 }
 fclose(fp);
 fclose(des);
+}
+
+void removefs(char* name, int entries, char* removeFile){
+
+FILE* fp;
+
+fp = fopen(name, "r+b");
+
+if(fp != NULL){
+    printf("Disk file opened successfully!\n");
+}
+else{
+    printf("Unable to open disk file!\n");
+}
+
+for(int i = 0; i < entries; i++){
+    FNT entry;
+
+    fread(&entry, sizeof(FNT), 1, fp);
+
+    if(strcmp(entry.filename, removeFile) == 0 && entry.inodeptr != -1){
+
+        entry.inodeptr = -1;
+        
+        int offset = i * sizeof(FNT);
+        fseek(fp, offset, SEEK_SET);
+        fwrite(&entry, sizeof(FNT), 1, fp);
+        break;
+        
+
+    }
+}
 
 
 
 }
-
 
 

@@ -17,6 +17,7 @@
 void create_fs(char* name, int numBlocks);
 void list(char* name, int entries);
 void savefs(char* name, int numBlocks);
+void removefs(char* name, int entries, char* removeFile);
 
 
 int main(int argc, char *argv[]){
@@ -69,10 +70,11 @@ else if(strcmp(argv[1], "list") == 0){
 }
 
 // remove command
-else if(strcmp(argv[1], "remove") == 0){
+else if(strcmp(argv[1], "removefs") == 0){
     if(argc < 3){
         printf("Please provide the correct number of arguments!\n");
     }
+    removefs(argv[2], atoi(argv[3]), argv[4]);
 }
 
 // rename command
