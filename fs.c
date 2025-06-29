@@ -77,7 +77,7 @@ void formatfs(char* name, int numOfFilenames, int numOfDabpt){
     fseek(fp, 0, SEEK_SET);
 
     // Zeroing out FNT
-    for(int i = 0; i < numofFilnames; i++){
+    for(int i = 0; i < numOfFilenames; i++){
         FNT entry;
 
         memset(entry.filename, 0, sizeof(entry.filename));
@@ -100,7 +100,7 @@ void formatfs(char* name, int numOfFilenames, int numOfDabpt){
     }
 
 
-    close(fp);
+    fclose(fp);
 }
 // list
 /*void list(char* name, int entries){
@@ -210,9 +210,25 @@ for(int i = 0; i < entries; i++){
 
     }
 }
+}
+// Openfs
+void openfs(char* name, int numBlocks){
 
+FILE* fp;
 
+fp = fopen(name, "rb");
+
+if(fp != NULL){
+    printf("Disk file opend successfully!\n");
+}
+else{
+    printf("Unable to open disk file!\n");
+}
 
 }
+
+
+
+
 
 

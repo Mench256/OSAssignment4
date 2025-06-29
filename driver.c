@@ -41,7 +41,7 @@ else if(strcmp(argv[1], "formatfs") == 0){
     if(argc < 4){
         printf("Please provide the correct number of arguments!\n");
     }
-    formatfs(argv[2], atoi(argv[3]),atoi(argv[4]))
+    formatfs(argv[2], atoi(argv[3]),atoi(argv[4]));
 }
 
 // savefs command
@@ -51,8 +51,7 @@ else if(strcmp(argv[1], "savefs") == 0){
         return 1;
     }
     
-    int numBlocks = atoi(argv[3]);
-    savefs(argv[2], numBlocks);
+    savefs(argv[2], atoi(argv[3]));
 }
 
 // openfs command
