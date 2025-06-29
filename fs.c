@@ -47,7 +47,7 @@ void create_fs(char* name, int numBlocks){
 }
 
 // formatfs
-void format_fs(char* name, int numOfFilenames, int numOfDabpt){
+/*void format_fs(char* name, int numOfFilenames, int numOfDabpt){
 
     FILE* fp;
     fp = fopen(name, "r+b");
@@ -74,9 +74,9 @@ void format_fs(char* name, int numOfFilenames, int numOfDabpt){
     int bptrstart = dabptstart + numDABPT;
 
 
-}
+}*/
 // list
-void list(char* name, int entries){
+/*void list(char* name, int entries){
 
         FILE* fp;
 
@@ -116,10 +116,11 @@ void list(char* name, int entries){
         fclose(fp);
 
 
-}
-void save(char* name, int numBlocks){
+}*/
+void savefs(char* name, int numBlocks){
 
 FILE* fp;
+FILE* des;
 
 fp = fopen(name, "rb");
 
@@ -129,6 +130,27 @@ if(fp != NULL){
 else{
     printf("Unable to open disk file!\n");
 }
+
+des = fopen("Destination_disk", "wb");
+
+if(des != NULL){
+    printf("Disk file opened successfully!\n");
+}
+else{
+    printf("Unable to open disk file!\n");
+}
+
+char buffer[BLOCK_SIZE];
+
+for(int i = 0; i < numBlocks; i++){
+
+        fread(buffer,BLOCK_SIZE, 1,  fp);
+        fwrite(buffer, BLOCK_SIZE, 1,  des);
+
+    
+}
+fclose(fp);
+fclose(des);
 
 
 

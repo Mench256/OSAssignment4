@@ -16,6 +16,7 @@
 // Function declarations
 void create_fs(char* name, int numBlocks);
 void list(char* name, int entries);
+void savefs(char* name, int numBlocks);
 
 
 int main(int argc, char *argv[]){
@@ -38,14 +39,18 @@ else if(strcmp(argv[1], "formatfs") == 0){
     if(argc < 4){
         printf("Please provide the correct number of arguments!\n");
     }
-    format(argv[2], atoi(argv[3]),atoi(argv[4]))
+    // format(argv[2], atoi(argv[3]),atoi(argv[4]))
 }
 
 // savefs command
 else if(strcmp(argv[1], "savefs") == 0){
-    if(argc < 3){
+    if(argc != 4){
         printf("Please provide the correct number of arguments!\n");
+        return 1;
     }
+    
+    int numBlocks = atoi(argv[3]);
+    savefs(argv[2], numBlocks);
 }
 
 // openfs command
@@ -60,7 +65,7 @@ else if(strcmp(argv[1], "list") == 0){
     if(argc < 2){
         printf("Please provide the correct number of arguments!\n");
     }
-    list(char* name, int entries);
+    //list(char* name, int entries);
 }
 
 // remove command
