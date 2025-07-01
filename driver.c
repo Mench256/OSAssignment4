@@ -8,6 +8,24 @@
 // https://www.geeksforgeeks.org/fseek-in-c-with-example/
 // https://www.geeksforgeeks.org/c/memset-c-example/
 // https://stackoverflow.com/questions/238603/how-can-i-get-a-files-size-in-c
+/*
+To compile :
+gcc -o fs driver.c fs.c
+
+File system command syntax
+-----------------------------
+
+createfs <diskname> <numBlocks>
+formatfs <diskname> <numFNT> <numDABPT>
+openfs <diskname> <numBlocks>
+savefs <diskname> <numBlocks>
+list <diskname>
+removefs <diskname> <filename> <numFNT>
+renamefs <oldname> <newname> <diskname> 0
+putfs <diskname> <host_filename>
+getfs <diskname> <filename_in_disk>
+userfs <username>
+*/
 
 #include <stdio.h>
 #include <unistd.h>
@@ -18,12 +36,13 @@
 void create_fs(char* name, int numBlocks);
 void list(char* name);
 void savefs(char* name, int numBlocks);
-void removefs(char* name, int entries, char* removeFile);
+void removefs(char* name, char* removeFile, int entries);
 void formatfs(char* name, int numOfFilenames, int numOfDabpt);
 void openfs(char* name, int numBlocks);
 void renamefs(char* oldname, char* newname, char* diskname, int fntstart);
 void putfs(char* diskname, char* name);
 void userfs(char* username);
+void getfs(char* name, char* filename);
 
 
 int main(int argc, char *argv[]){
@@ -79,7 +98,7 @@ else if(strcmp(argv[1], "removefs") == 0){
     if(argc < 3){
         printf("Please provide the correct number of arguments!\n");
     }
-   // removefs(argv[2], atoi(argv[3]), argv[4], name, 0);
+   removefs(argv[2], argv[3], atoi(argv[3]));
 }
 
 // rename command
@@ -101,10 +120,12 @@ else if(strcmp(argv[1], "putfs") == 0){
 }
 
 // get command
-else if(strcmp(argv[1], "get") == 0){
+else if(strcmp(argv[1], "getfs") == 0){
     if(argc < 3){
         printf("Please provide the correct number of arguments!\n");
+        return 1;
     }
+    getfs(argv[2], argv[3]);
 }
 
 // user command
