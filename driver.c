@@ -21,8 +21,9 @@ void savefs(char* name, int numBlocks);
 void removefs(char* name, int entries, char* removeFile);
 void formatfs(char* name, int numOfFilenames, int numOfDabpt);
 void openfs(char* name, int numBlocks);
-void renamefs(char* oldname, char* newname, int numBlocks, FILE* fp, int fntstart);
-void putfs(char* name);
+void renamefs(char* oldname, char* newname, char* diskname, int fntstart);
+void putfs(char* diskname, char* name);
+void userfs(char* username);
 
 
 int main(int argc, char *argv[]){
@@ -86,17 +87,17 @@ else if(strcmp(argv[1], "renamefs") == 0){
     if(argc < 4){
         printf("Please provide the correct number of arguments!\n");
     }
-    // setting this to zero for now but name sure to fix later
-   // renamefs(argv[2], argv[3], globalNumBlocks, name, 0);
+    renamefs(argv[2], argv[3], argv[4], 0);
 }
 
 // put command
 else if(strcmp(argv[1], "putfs") == 0){
-    if(argc != 3){
+    if(argc != 4){
         printf("Please provide the correct number of arguments!\n");
+        return 1;
     }
 
-    putfs(argv[2]);
+    putfs(argv[2], argv[3]);
 }
 
 // get command
@@ -107,10 +108,12 @@ else if(strcmp(argv[1], "get") == 0){
 }
 
 // user command
-else if(strcmp(argv[1], "user") == 0){
+else if(strcmp(argv[1], "userfs") == 0){
     if(argc < 3){
         printf("Please provide the correct number of arguments!\n");
+        return 1;
     }
+    userfs(argv[2]);
 }
 
 // link command
@@ -129,7 +132,7 @@ else if(strcmp(argv[1], "unlink") == 0){
 }
 
 else{
-    printf("Command now found!\n");
+    printf("Command not found!\n");
 }
 
     return 0;

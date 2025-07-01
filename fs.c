@@ -22,13 +22,23 @@ typedef struct{
     int blockptrs[8];
 }BPTS;
 
-// global variables
-int numFNT = 0;
-int numDABPT = 0;
-int fntstart = 0;
-int dabptstart = 0;
-int bptrstart = 0;
+typedef struct{
+    int numFNT;
+    int numDABPT;
+    int fntstart;
+    int dabptstart;
+    int bptrstart;
+}DiskMeta;
+
+int numFNT;
+int numDABPT;
+int fntstart;
+int dabptstart;
+int bptrstart;
+
+
 FILE* diskFile = NULL;
+char currentuser[50] = "filler";
 
 // creatfs 
 void create_fs(char* name, int numBlocks){
@@ -43,8 +53,10 @@ void create_fs(char* name, int numBlocks){
     else{
         printf("Unable to open disk file!\n");
     }
+    diskFile = fp;
 
     char buffer[BLOCK_SIZE];
+    memset(buffer, 0, BLOCK_SIZE);
     // Writing binary data to file
     for(int i = 0; i < numBlocks; i++){
         size_t written = fwrite(buffer, sizeof(char), BLOCK_SIZE, fp);
@@ -58,6 +70,8 @@ void create_fs(char* name, int numBlocks){
 // formatfs
 void formatfs(char* name, int numOfFilenames, int numOfDabpt){
 
+
+
     FILE* fp;
     fp = fopen(name, "r+b");
 
@@ -66,7 +80,10 @@ void formatfs(char* name, int numOfFilenames, int numOfDabpt){
     }
     else{
         printf("Unable to open disk file!\n");
+        return;
     }
+    fntstart = 1;
+
 
     // Calculating how many FNT entries fit in one block
     int fntentries = BLOCK_SIZE / sizeof(FNT);
@@ -81,8 +98,19 @@ void formatfs(char* name, int numOfFilenames, int numOfDabpt){
     dabptstart = fntstart + numFNT;
     bptrstart = dabptstart + numDABPT;
 
-    // Starting at beginning of FNT
+    DiskMeta meta = {
+    .numFNT = numFNT,
+    .numDABPT = numDABPT,
+    .fntstart = fntstart,
+    .dabptstart = dabptstart,
+    .bptrstart = bptrstart
+    };
+
     fseek(fp, 0, SEEK_SET);
+    fwrite(&meta, sizeof(DiskMeta), 1, fp);
+
+    // Starting at beginning of FNT
+    fseek(fp, fntstart * BLOCK_SIZE, SEEK_SET);
 
     // Zeroing out FNT
     for(int i = 0; i < numOfFilenames; i++){
@@ -104,6 +132,7 @@ void formatfs(char* name, int numOfFilenames, int numOfDabpt){
         data.mod = 0;
         data.blockptr = -1;
         memset(data.username, 0, sizeof(data.username));
+        printf("Writting data......");
         fwrite(&data, sizeof(DABPT), 1, fp);
     }
 
@@ -123,6 +152,15 @@ void list(char* name){
             printf("Unable to open diskfile!\n");
         }
 
+        DiskMeta meta;
+        fread(&meta, sizeof(DiskMeta), 1, fp);
+
+        numFNT = meta.numFNT;
+        numDABPT = meta.numDABPT;
+        fntstart = meta.fntstart;
+        dabptstart = meta.dabptstart;
+        bptrstart = meta.bptrstart;
+
 
 
         // fseek sets pointer position
@@ -131,10 +169,8 @@ void list(char* name){
         int entriesPerBlock = BLOCK_SIZE / sizeof(FNT);
         int totalFNT = numFNT * entriesPerBlock;
 
-        printf("%d", totalFNT);
         for(int i = 0; i < totalFNT; i++){
-            printf("Hello from the for loop!\n");
-            FNT entry;
+            FNT entry = {0};
             // fread advances position each time
             fseek(fp, fntstart * BLOCK_SIZE + i * sizeof(FNT), SEEK_SET);
             fread(&entry, sizeof(FNT), 1, fp);
@@ -144,6 +180,7 @@ void list(char* name){
                 int offset = (dabptstart * BLOCK_SIZE) + (entry.inodeptr * sizeof(DABPT));
                 fseek(fp, offset, SEEK_SET);
                 fread(&data, sizeof(DABPT), 1, fp);
+                //printf("entry.inodeptr = %d\n", entry.inodeptr);
 
                 printf("Filename: %s   Last Modified: %s   Username: %s\n", entry.filename, ctime(&data.mod), data.username);
             }
@@ -235,89 +272,189 @@ else{
 }
 
 // rename 
-/*void renamefs(char* oldname, char* newname, int numBlocks, FILE* fp, int fntstart){
+void renamefs(char* oldname, char* newname, char* diskname, int fntstart){
 
+    FILE* fp = fopen(diskname, "r+b");
+    if (!fp) {
+        printf("Unable to open disk file!\n");
+        return;
+    }
+
+    DiskMeta meta;
+    fseek(fp, 0, SEEK_SET);
+    if (fread(&meta, sizeof(DiskMeta), 1, fp) != 1) {
+        printf("Failed to read disk metadata\n");
+        fclose(fp);
+        return;
+    }
+
+    int entriesPerBlock = BLOCK_SIZE / sizeof(FNT);
+    int totalFNT = meta.numFNT * entriesPerBlock;
     FNT entry;
 
-    int fntentries = numBlocks * (BLOCK_SIZE / sizeof(FNT));
-
-    for(int i = 0; i < fntentries; i++){
-
-        fseek(fp, fntstart * BLOCK_SIZE + i, sizeof(FNT), SEEK_SET);
+    for (int i = 0; i < totalFNT; i++) {
+        fseek(fp, meta.fntstart * BLOCK_SIZE + i * sizeof(FNT), SEEK_SET);
         fread(&entry, sizeof(FNT), 1, fp);
 
-        if(strcmp(entry.filename, oldname) == 0){
+        if (entry.inodeptr != -1 && strcmp(entry.filename, oldname) == 0) {
+            // Update filename
             strncpy(entry.filename, newname, sizeof(entry.filename));
-            fseek(fp, fntstart * BLOCK_SIZE * i sizeof(FNT), SEEK_SET);
+            entry.filename[sizeof(entry.filename) - 1] = '\0';
+
+            fseek(fp, meta.fntstart * BLOCK_SIZE + i * sizeof(FNT), SEEK_SET);
             fwrite(&entry, sizeof(FNT), 1, fp);
+
             printf("File: %s was renamed to %s!\n", oldname, newname);
+            fclose(fp);
             return;
         }
     }
     printf("Unable to find file!\n");
-}*/
-
-void putfs(char* name){
-
-
-    struct stat st;
-
-    stat(name, &st);
-    int size = st.st_size;
-
-    FILE* fp;
-
-    fp = fopen(name, "rb");
-
-    if(fp != NULL){
-        printf("Disk file opend successfully!\n");
-    }
-    else{
-        printf("Unable to open disk file!\n");
-    }
-    char* buffer = malloc(size);
-    fread(buffer, 1, size, fp);
     fclose(fp);
+}
 
-    FILE* disk = fopen("disk1", "r+b");
+void putfs(char* diskname, char* name){
+
+struct stat st;
+    if (stat(name, &st) != 0) {
+        printf("Unable to stat source file!\n");
+        return;
+    }
+    int size = st.st_size;
+    FILE* fp = fopen(name, "rb");
+    if(fp == NULL){
+        printf("Unable to open source file!\n");
+        return;
+    }
+    FILE* disk = fopen(diskname, "r+b");
+    if(disk == NULL) {
+        printf("Unable to open disk file!\n");
+        fclose(fp);
+        return;
+    }
+    DiskMeta meta;
+    fseek(disk, 0, SEEK_SET);
+    if (fread(&meta, sizeof(DiskMeta), 1, disk) != 1) {
+        printf("Failed to read disk metadata\n");
+        fclose(fp);
+        fclose(disk);
+        return;
+    }
+    int entriesPerBlock = BLOCK_SIZE / sizeof(FNT);
+    int totalFNT = meta.numFNT * entriesPerBlock;
+    int dabptEntriesPerBlock = BLOCK_SIZE / sizeof(DABPT);
+    int totalDABPT = meta.numDABPT * dabptEntriesPerBlock;
+    int bptsEntriesPerBlock = BLOCK_SIZE / sizeof(BPTS);
+    int totalBPTS = bptsEntriesPerBlock; // Only 1 block for BPTS for now
+    // Find a free FNT entry
+    FNT entry = {0};
+    int fntIndex = -1;
+    for(int i = 0; i < totalFNT; i++){
+        fseek(disk, meta.fntstart * BLOCK_SIZE + i * sizeof(FNT), SEEK_SET);
+        fread(&entry, sizeof(FNT), 1, disk);
+        if(entry.inodeptr == -1){
+            fntIndex = i;
+            break;
+        }
+    }
+    if(fntIndex == -1){
+        printf("No free FNT entry available.\n");
+        fclose(fp);
+        fclose(disk);
+        return;
+    }
+    // Find a free DABPT entry
+    DABPT data = {0};
+    int dabptIndex = -1;
+    for(int i = 0; i < totalDABPT; i++){
+        fseek(disk, meta.dabptstart * BLOCK_SIZE + i * sizeof(DABPT), SEEK_SET);
+        fread(&data, sizeof(DABPT), 1, disk);
+        if(data.blockptr == -1){
+            dabptIndex = i;
+            break;
+        }
+    }
+    if(dabptIndex == -1){
+        printf("No free DABPT entry available.\n");
+        fclose(fp);
+        fclose(disk);
+        return;
+    }
+    // Find a free BPTS entry
+    BPTS bpt = {0};
+    int bptsIndex = -1;
+    for(int i = 0; i < totalBPTS; i++){
+        fseek(disk, meta.bptrstart * BLOCK_SIZE + i * sizeof(BPTS), SEEK_SET);
+        fread(&bpt, sizeof(BPTS), 1, disk);
+        int isFree = 1;
+        for(int j = 0; j < 8; j++){
+            if(bpt.blockptrs[j] != 0 && bpt.blockptrs[j] != -1){
+                isFree = 0;
+                break;
+            }
+        }
+        if(isFree){
+            bptsIndex = i;
+            break;
+        }
+    }
+    if(bptsIndex == -1){
+        printf("No free BPTS entry available.\n");
+        fclose(fp);
+        fclose(disk);
+        return;
+    }
+    // Allocate data blocks (naive: just use next available blocks after bptrstart)
     int blocks = (size + BLOCK_SIZE - 1) / BLOCK_SIZE;
-    int datastart = fntstart + numFNT + numDABPT + 2;
-
-    for(int i= 0; i < blocks; i++){
-        fseek(disk, (datastart + i) * BLOCK_SIZE, SEEK_SET);
-        fwrite(buffer + i * BLOCK_SIZE, 1, BLOCK_SIZE, disk);
-    }
-
-
-    BPTS bpt;
-
+    int datastart = meta.bptrstart + totalBPTS;
+    int dataBlockIndices[8];
     for(int i = 0; i < blocks; i++){
-        bpt.blockptrs[i] = datastart + i;
+        dataBlockIndices[i] = datastart + bptsIndex * 8 + i;
     }
-    for(int i = blocks; i < 8; i++){
-        bpt.blockptrs[i] = -1;
+    // Write file data to disk blocks
+    char buffer[BLOCK_SIZE];
+    for(int i = 0; i < blocks; i++){
+        size_t bytesRead = fread(buffer, 1, BLOCK_SIZE, fp);
+        fseek(disk, dataBlockIndices[i] * BLOCK_SIZE, SEEK_SET);
+        fwrite(buffer, 1, bytesRead, disk);
     }
-    fseek(disk, bptrstart * BLOCK_SIZE, SEEK_SET);
+    // Write BPTS entry
+    for(int i = 0; i < 8; i++){
+        if(i < blocks)
+            bpt.blockptrs[i] = dataBlockIndices[i];
+        else
+            bpt.blockptrs[i] = -1;
+    }
+    fseek(disk, meta.bptrstart * BLOCK_SIZE + bptsIndex * sizeof(BPTS), SEEK_SET);
     fwrite(&bpt, sizeof(BPTS), 1, disk);
-
-    DABPT data;
+    // Write DABPT entry
     data.fileSize = size;
     data.mod = time(NULL);
-    data.blockptr = 0;
-
-    // Make sure to change to username later
-    strncpy(data.username, "filler", sizeof("filler"));
-
-    fseek(disk, dabptstart * BLOCK_SIZE, SEEK_SET);
+    data.blockptr = bptsIndex;
+    strncpy(data.username, currentuser, sizeof(data.username));
+    data.username[sizeof(data.username) - 1] = '\0';
+    fseek(disk, meta.dabptstart * BLOCK_SIZE + dabptIndex * sizeof(DABPT), SEEK_SET);
     fwrite(&data, sizeof(DABPT), 1, disk);
-
-    FNT entry;
-
-    strncpy(entry.filename, name, sizeof(entry.filename));
-    entry.inodeptr = 0;
-    fseek(disk, fntstart * BLOCK_SIZE, SEEK_SET);
+    // Write FNT entry
+    // Store only the base filename
+    const char* base = strrchr(name, '/');
+    if (!base) base = strrchr(name, '\\');
+    if (!base) base = name; else base++;
+    memset(&entry, 0, sizeof(FNT));
+    strncpy(entry.filename, base, sizeof(entry.filename));
+    entry.filename[sizeof(entry.filename) - 1] = '\0';
+    entry.inodeptr = dabptIndex;
+    fseek(disk, meta.fntstart * BLOCK_SIZE + fntIndex * sizeof(FNT), SEEK_SET);
     fwrite(&entry, sizeof(FNT), 1, disk);
+    printf("File was successfully stored!\n");
+    fclose(fp);
+    fclose(disk);
+}
 
+void userfs(char* username){
+    strncpy(currentuser, username, sizeof(currentuser));
+    currentuser[sizeof(currentuser) - 1] ='\0';
+    printf("The User is set to: %s\n", currentuser);
 }
 
 
