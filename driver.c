@@ -1,4 +1,4 @@
-// Abraham Menchaca, 1002167812, CSE3320-002
+// Abraham Menchaca
 
 // Sites used
 // https://www.geeksforgeeks.org/command-line-arguments-in-c-cpp/
